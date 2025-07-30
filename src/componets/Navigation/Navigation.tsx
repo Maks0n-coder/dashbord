@@ -1,35 +1,45 @@
+'use client';
 
+import React, { useState } from 'react';
 import {
-    Toolbar, Typography, List, IconButton, Drawer,
+    Toolbar, Typography, List, Drawer,
     ListItem,
-    ListItemIcon,
-    ListItemText,
+    IconButton,
 } from '@mui/material';
 import {
-    Dashboard as DashboardIcon,
-    BarChart as BarChartIcon,
-    Assignment as AssignmentIcon,
-    Email as EmailIcon,
-    Person as PersonIcon,
-    Settings as SettingsIcon,
-    ExitToApp as ExitToAppIcon,
     Home as HomeIcon,
+    Close as CloseIcon,
+    Menu as MenuIcon,
 } from '@mui/icons-material';
-import Link from 'next/link';
 import { styled } from '@mui/material/styles';
 import { drawerWidth } from '@/theme';
+import { NavigationItem } from './NavigationItem';
+import { navigationData } from './navigationData';
+import Link from 'next/link';
 
+const collapsedDrawerWidth = 64; // Ширина свернутого drawer
 
-const StyledDrawer = styled(Drawer)({
-    width: drawerWidth,
+const StyledDrawer = styled(Drawer, {
+    shouldForwardProp: (prop) => prop !== 'collapsed',
+})<{ collapsed?: boolean }>(({ theme, collapsed }) => ({
+    width: collapsed ? collapsedDrawerWidth : drawerWidth,
     flexShrink: 0,
+    transition: theme.transitions.create('width', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+    }),
     '& .MuiDrawer-paper': {
-        width: drawerWidth,
+        width: collapsed ? collapsedDrawerWidth : drawerWidth,
         boxSizing: 'border-box',
         backgroundColor: '#222d32', // Dark background for the sidebar
         color: 'white',
+        transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+        overflowX: 'hidden',
     },
-});
+}));
 
 const StyledListItem = styled(ListItem)({
     paddingTop: '12px', // Increased padding
@@ -39,80 +49,53 @@ const StyledListItem = styled(ListItem)({
     },
 });
 
-const StyledListItemIcon = styled(ListItemIcon)({
-    color: 'white',
-});
 
-const StyledListItemText = styled(ListItemText)({
-    '& .MuiTypography-root': {
-        fontSize: '1rem', // Slightly larger font size
+
+const ToggleButton = styled(IconButton)({
+    position: 'absolute',
+    top: '8px',
+    right: '8px',
+    color: 'white',
+    '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
     },
 });
 
 export const Navigation = () => {
+    const [collapsed, setCollapsed] = useState(false);
+
+    const handleToggle = () => {
+        setCollapsed(!collapsed);
+    };
 
     return (
-        <StyledDrawer variant="permanent" anchor="left">
+        <StyledDrawer variant="permanent" anchor="left" collapsed={collapsed}>
             <Toolbar sx={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 height: '64px', // Adjust height as needed
-            }}
-            >
-                <HomeIcon sx={{ mr: 1, color: 'white' }} />
-                <Typography variant="h6" noWrap color="white">
-                    COMPANY LOGO
-                </Typography>
+                position: 'relative',
+            }}>
+                {/*  <HomeIcon sx={{ mr: collapsed ? 0 : 1, color: 'white' }} /> */}
+                {!collapsed && (
+                    <Typography variant="h6" noWrap color="white">
+                        LOGO
+                    </Typography>
+                )}
+                <ToggleButton onClick={handleToggle} size="small">
+                    {collapsed ? <MenuIcon /> : <CloseIcon />}
+                </ToggleButton>
             </Toolbar>
             <List>
-                <StyledListItem key="Dashboard">
-                    <StyledListItemIcon>
-                        <DashboardIcon />
-                    </StyledListItemIcon>
-                    <StyledListItemText primary="Dashboard" />
-                </StyledListItem>
-                <StyledListItem key="Chart">
-                    <StyledListItemIcon>
-                        <BarChartIcon />
-                    </StyledListItemIcon>
-                    <StyledListItemText primary="Chart" />
-                </StyledListItem>
-                <Link href={'/form'}>
-                    <StyledListItem key="Form">
-                        <StyledListItemIcon>
-                            <AssignmentIcon />
-                        </StyledListItemIcon>
-                        <StyledListItemText primary="Form" />
-                    </StyledListItem>
-                </Link>
-                <StyledListItem key="Email">
-                    <StyledListItemIcon>
-                        <EmailIcon />
-                    </StyledListItemIcon>
-                    <StyledListItemText primary="Email" />
-                </StyledListItem>
-                <Link href={'/auth'}>
-                    <StyledListItem key="Profil">
-                        <StyledListItemIcon>
-                            <PersonIcon />
-                        </StyledListItemIcon>
-                        <StyledListItemText primary="Profil" />
-                    </StyledListItem>
-                </Link>
-                <StyledListItem key="Setting">
-                    <StyledListItemIcon>
-                        <SettingsIcon />
-                    </StyledListItemIcon>
-                    <StyledListItemText primary="Setting" />
-                </StyledListItem>
-                <StyledListItem key="Sign Out">
-                    <StyledListItemIcon>
-                        <ExitToAppIcon />
-                    </StyledListItemIcon>
-                    <StyledListItemText primary="Sign Out" />
-                </StyledListItem>
+                {navigationData.map((item) => (
+                    <Link key={item.key} href={item.path}>
+                        <StyledListItem >
+                            <NavigationItem collapsed={collapsed} {...item} />
+                        </StyledListItem>
+                    </Link>
+                ))}
             </List>
         </StyledDrawer>
-    )
-}
+    );
+};
